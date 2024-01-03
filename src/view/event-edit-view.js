@@ -1,5 +1,5 @@
-import { createElement } from "../render.js";
-import {POINT_TYPES} from "../const.js";
+import { createElement } from '../render.js';
+import {POINT_TYPES} from '../const.js';
 
 function createEventEditTemplate(point, destinations, offers) {
   const pointDestination = destinations.find(
@@ -30,10 +30,10 @@ function createEventEditTemplate(point, destinations, offers) {
   ${POINT_TYPES.map((pointType) => (
     `<div class="event__type-item">
       <input id="event-type-${pointType}-${pointId}" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${pointType}"
-      ${pointType === type ? 'checked' : ""}>
+      ${pointType === type ? 'checked' : ''}>
       <label class="event__type-label  event__type-label--${pointType}" for="event-type-${pointType}-${pointId}">${pointType}</label>
     </div>`
-  )).join("")}
+  )).join('')}
           </fieldset>
         </div>
       </div>
@@ -43,9 +43,9 @@ function createEventEditTemplate(point, destinations, offers) {
           ${type}
         </label>
         <input class="event__input  event__input--destination" id="event-destination-${pointId}" type="text" name="event-destination"
-        value="${name || "" }" list="destination-list-${pointId}">
+        value="${name || '' }" list="destination-list-${pointId}">
         <datalist id="destination-list-${pointId}">
-          ${destinations.map((destination) => `<option value="${destination.name}"></option>`).join("")}
+          ${destinations.map((destination) => `<option value="${destination.name}"></option>`).join('')}
         </datalist>
       </div>
 
@@ -66,11 +66,11 @@ function createEventEditTemplate(point, destinations, offers) {
       </div>
 
       <button class="event__save-btn  btn  btn--blue" type="submit">Save</button>
-      <button class="event__reset-btn" type="reset">${point.id ? "Delete" : "Cancel"}</button>
+      <button class="event__reset-btn" type="reset">${point.id ? 'Delete' : 'Cancel'}</button>
       ${point.id ? `<button class="event__rollup-btn" type="button">
         <span class="visually-hidden">Open event</span>
       </button>`
-          : ""}
+    : ''}
   </header>
 
     <section class="event__details">
@@ -80,8 +80,8 @@ function createEventEditTemplate(point, destinations, offers) {
           <div class="event__available-offers">
 
           ${typeOffers.map((typeOffer) => {
-            const checkedOffers = pointOffers.map((offer)=>offer.id).includes(typeOffer.id)? 'checked':'';
-            return(`<div class="event__offer-selector">
+    const checkedOffers = pointOffers.map((offer)=>offer.id).includes(typeOffer.id) ? 'checked' : '';
+    return(`<div class="event__offer-selector">
             <input class="event__offer-checkbox  visually-hidden" id="event-offer-${typeOffer.title}-${pointId}" type="checkbox" name="event-offer-${typeOffer.title}" ${checkedOffers}>
             <label class="event__offer-label" for="event-offer-${typeOffer.title}-${pointId}">
               <span class="event__offer-title">${typeOffer.title}</span>
@@ -89,27 +89,28 @@ function createEventEditTemplate(point, destinations, offers) {
               <span class="event__offer-price">${typeOffer.price}</span>
             </label>
           </div>`
-        )}).join("")}
+    );
+  }).join('')}
       </div>
       </section>`
-      : ""}
+    : ''}
 
 
-      ${pointDestination ?(`<section class="event__section  event__section--destination">
+      ${pointDestination ? (`<section class="event__section  event__section--destination">
             <h3 class="event__section-title  event__section-title--destination">Destination</h3>
             <p class="event__destination-description">${description}</p>
 
-            ${pictures.length ? ( `<div class="event__photos-container">
+            ${pictures.length ? (`<div class="event__photos-container">
                 <div class="event__photos-tape">
                   ${pictures.map((pic) =>`<img class="event__photo" src="${pic.src}" alt="${pic.description}">`)}
                 </div>
               </div>`
-            ) : ""}
+    ) : ''}
           </section>`
-        )  : ""}
+  ) : ''}
     </section>
   </form>
-  </li>`
+  </li>`;
 }
 
 export default class EventEditView {
