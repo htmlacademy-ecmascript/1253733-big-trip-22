@@ -6,7 +6,7 @@ export const mockPoints = [
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcab',
     isFavorite: false,
-    offers: [
+    offersId: [
       'b4c3e4e6-9053-42ce-b747-e281314baa10',
       'b4c3e4e6-9053-42ce-b747-e281314baa11',
       'b4c3e4e6-9053-42ce-b747-e281314baa12',
@@ -20,7 +20,7 @@ export const mockPoints = [
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edcab',
     isFavorite: true,
-    offers: ['b4c3e4e6-9053-42ce-b747-e281314baa1'],
+    offersId: ['b4c3e4e6-9053-42ce-b747-e281314baa1'],
     type: 'bus',
   },
   {
@@ -30,7 +30,7 @@ export const mockPoints = [
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edca09b',
     isFavorite: false,
-    offers: ['b4c3e4e6-9053-42ce-b747-e281314baa2'],
+    offersId: ['b4c3e4e6-9053-42ce-b747-e281314baa2'],
     type: 'drive',
   },
   {
@@ -40,7 +40,7 @@ export const mockPoints = [
     dateTo: '2019-07-11T11:22:13.375Z',
     destination: 'cfe416cq-10xa-ye10-8077-2fs9a01edc23',
     isFavorite: true,
-    offers: [
+    offersId: [
       'b4c3e4e6-9053-42ce-b747-e281314baa3',
       'b4c3e4e6-9053-42ce-b747-e281314baa4',
     ],
