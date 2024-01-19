@@ -3,27 +3,34 @@ import { destinationsMock } from '../mock/destinations.js';
 import { offersMock } from '../mock/offers.js';
 
 export default class PointsModel {
-  constructor() {
-    this.points = [];
-    this.destinations = [];
-    this.offers = [];
+  #points = mockPoints;
+  #destinations = destinationsMock;
+  #offers = offersMock;
+
+  get points() {
+    return structuredClone(this.#points);
   }
 
-  init() {
-    this.points = mockPoints;
-    this.destinations = destinationsMock;
-    this.offers = offersMock;
+  get destinations() {
+    return structuredClone(this.#destinations);
   }
 
-  getPoints() {
-    return this.points;
+  get offers() {
+    return structuredClone(this.#offers);
   }
 
-  getDestinations() {
-    return this.destinations;
+  getOffersByType(type){
+    const allOffers = this.#offers;
+    return allOffers.find((item) => item.type === type);
   }
 
-  getOffers() {
-    return this.offers;
+  getOffersById(type, itemId) {
+    const offersByType = this.getOffersByType(type);
+    return offersByType.offers.filter((item) => itemId.find((id) => item.id === id));
+  }
+
+  getDestinationById(id) {
+    const allDestinations = this.destinations;
+    return allDestinations.find((item)=> item.id === id);
   }
 }
