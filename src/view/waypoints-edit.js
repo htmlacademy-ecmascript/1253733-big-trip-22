@@ -150,8 +150,8 @@ export default class WaypointsEditView extends AbstractView {
   #destinationsById = null;
   #offersByType = null;
   #offersById = null;
-
   #handleFormSubmit;
+
   constructor({point, destinations, offersById, offersByType, destinationsById, onFormSubmit}) {
     super();
     this.#point = point;
@@ -163,6 +163,7 @@ export default class WaypointsEditView extends AbstractView {
 
     this.element.querySelector('.event--edit')?.addEventListener('submit', this.#formSubmitHandler);
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#formSubmitHandler);
+    this.element.querySelector('.event__save-btn').addEventListener('click', (evt) => evt.preventDefault());
   }
 
   get template() {
@@ -171,6 +172,6 @@ export default class WaypointsEditView extends AbstractView {
 
   #formSubmitHandler = (e) => {
     e.preventDefault();
-    this.#handleFormSubmit();
+    this.#handleFormSubmit(this.#point);
   };
 }

@@ -10,4 +10,10 @@ function humanizeDataPoints(dataPoint) {
   return dataPoint ? dayjs(dataPoint).format(DATA_FORMAT) : '';
 }
 
-export { getRandomArrayElement, humanizeDataPoints };
+function updateItem(items, update) {
+  return items.map((item) => item.id === update.id ? update : item);
+}
+
+export { getRandomArrayElement, humanizeDataPoints,updateItem};
+
+
