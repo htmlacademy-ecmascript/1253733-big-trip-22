@@ -1,4 +1,7 @@
-export const mockPoints = [
+import { v4 as uuidv4 } from 'uuid';
+import {getRandomArrayElement} from '../utils.js';
+
+const mockPoints = [
   {
     id: 'cfe416cq-10xa-ye10-8077-2fs9a01edc23',
     basePrice: 1000,
@@ -47,3 +50,12 @@ export const mockPoints = [
     type: 'flight',
   },
 ];
+
+function getRandomPoint() {
+  return {
+    pointId: uuidv4(),
+    ...getRandomArrayElement(mockPoints)
+  };
+}
+
+export {getRandomPoint};
