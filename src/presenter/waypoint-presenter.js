@@ -12,6 +12,8 @@ export default class WaypointPresenter {
   #waypoint = null;
   #waypointEdit = null;
   #point = null;
+  #destination = null;
+  #offersByType = null;
   #waypointList = null;
   #pointsModel = null;
   #handlePointChange = null;
@@ -27,13 +29,15 @@ export default class WaypointPresenter {
 
   init (point) {
     this.#point = point;
+    this.#offersByType = this.#pointsModel.getOffersByType(point.type);
+    this.#destination = this.#pointsModel.getDestinationById(point.destination);
     const prevWaypoint = this.#waypoint;
     const prevWaypointEdit = this.#waypointEdit;
 
     this.#waypoint = new Waypoint ({
       point: this.#point,
-      destinationsById: this.#pointsModel.getDestinationById(point.destination),
       offersById: [...this.#pointsModel.getOffersById(point.type,point.offersId)],
+      destination:  this.#destination,
       onFavoriteClick: this.#handleFavoriteChange,
       onEditClick: this.#handleEditClick,
     });
@@ -41,9 +45,10 @@ export default class WaypointPresenter {
     this.#waypointEdit = new WaypointsEditView ({
       point: this.#point,
       destinations: this.#pointsModel.destinations,
+      offersByType: this.#offersByType,
+      offersAll: [...this.#pointsModel.offers],
       offersById: [...this.#pointsModel.getOffersById(point.type,point.offersId)],
-      offersByType: this.#pointsModel.getOffersByType(point.type),
-      destinationsById: this.#pointsModel.getDestinationById(point.destination),
+      destination:  this.#destination,
       onFormSubmit: this.#handleFormSubmit,
     });
 
@@ -72,12 +77,14 @@ export default class WaypointPresenter {
   #escKeyDownHandler = (e)=> {
     if(e.kay === 'Escape') {
       e.preventDefault();
+      this.#waypointEdit.reset(this.#point,this.#offersByType, this.#destination);
       this.#replaceFormToPoint();
     }
   };
 
   resetView(){
     if (this.#mode !== Mode.DEFAULT) {
+      this.#waypointEdit.reset(this.#point, this.#offersByType, this.#destination);
       this.#replaceFormToPoint();
     }
   }

@@ -1,6 +1,6 @@
 import { getRandomPoint } from '../mock/points.js';
-import { destinationsMock } from '../mock/destinations.js';
-import { offersMock } from '../mock/offers.js';
+import { destinationsMock } from '../mock/points.js';
+import { offersMock } from '../mock/points.js';
 
 const WAYPOINT_COUNT = 2;
 
@@ -22,7 +22,7 @@ export default class PointsModel {
   }
 
   getOffersByType(type){
-    const allOffers = this.#offers;
+    const allOffers = this.offers;
     return allOffers.find((item) => item.type === type);
   }
 
