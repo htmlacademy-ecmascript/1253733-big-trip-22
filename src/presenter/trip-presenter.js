@@ -42,7 +42,12 @@ export default class TripPresenter {
     });
 
     waypointPresenter.init(point);
-    this.#waypointPresenters.set(point.pointId,waypointPresenter);
+    this.#waypointPresenters.set(point.id,waypointPresenter);
+  }
+
+  #clearWaypointList() {
+    this.#waypointPresenters.forEach((presenter) => presenter.destroy());
+    this.#waypointPresenters.clear();
   }
 
   #handleModeChange = () =>{
@@ -51,7 +56,7 @@ export default class TripPresenter {
 
   #handlePointChange = (updatePoint)=> {
     this.#points = updateItem(this.#points, updatePoint);
-    this.#waypointPresenters.get(updatePoint.pointId).init(updatePoint);
+    this.#waypointPresenters.get(updatePoint.id).init(updatePoint);
 
   };
 

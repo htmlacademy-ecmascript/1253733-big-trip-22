@@ -4,9 +4,9 @@ function createWaypointDataTemplate() {
   return ('<time class="event__date" datetime="2019-03-18">MAR 18</time>');
 }
 
-function createWaypointTypeEventTemplate (point, destinationsById) {
+function createWaypointTypeEventTemplate (point, destination) {
   const {type} = point;
-  const {name} = destinationsById;
+  const { name} = destination;
   return (`<div class="event__type">
     <img class="event__type-icon" width="42" height="42" src="img/icons/${type.toLowerCase()}.png" alt="Event type icon">
   </div>
@@ -56,12 +56,12 @@ function createWaypointRollupBtnTemplate() {
   </button>`);
 }
 
-function createWaypointTemplate (point, destinationsById, offersById) {
+function createWaypointTemplate (point, offersById,destination) {
   return(`
   <li class="trip-events__item">
     <div class="event">
     ${createWaypointDataTemplate()}
-    ${createWaypointTypeEventTemplate(point,destinationsById)}
+    ${createWaypointTypeEventTemplate(point,destination)}
     ${createWaypointScheduleTemplate(point)}
     ${createWaypointPriceTemplate(point)}
     ${createWaypointOffersTemplate(offersById)}
@@ -73,17 +73,17 @@ function createWaypointTemplate (point, destinationsById, offersById) {
 
 export default class Waypoint extends AbstractView {
   #point;
-  #destinationsById;
   #offersById;
+  #destination;
   #handlerEditClick;
   #handlerFavoriteClick;
 
 
-  constructor({point, destinationsById, offersById, onFavoriteClick, onEditClick}) {
+  constructor({point, offersById, destination, onFavoriteClick, onEditClick}) {
     super();
     this.#point = point;
-    this.#destinationsById = destinationsById;
     this.#offersById = offersById;
+    this.#destination = destination;
     this.#handlerFavoriteClick = onFavoriteClick;
     this.#handlerEditClick = onEditClick;
     this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
@@ -94,8 +94,8 @@ export default class Waypoint extends AbstractView {
   get template() {
     return createWaypointTemplate(
       this.#point,
-      this.#destinationsById,
-      this.#offersById
+      this.#offersById,
+      this.#destination
     );
   }
 

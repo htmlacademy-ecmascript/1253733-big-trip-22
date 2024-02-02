@@ -1,9 +1,9 @@
-import AbstractView from '../framework/view/abstract-view.js';
+import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
 import {POINT_TYPES} from '../const.js';
 
-function createTypeEditTemplate(point, destinationsById, destinations) {
+function createTypeEditTemplate(point, destination, destinations) {
   const {type, id} = point;
-  const{name} = destinationsById;
+  const { name: namePoint } = destination;
 
   return `<div class="event__type-wrapper">
         <label class="event__type  event__type-btn" for="event-type-toggle-${id}">
@@ -16,7 +16,7 @@ function createTypeEditTemplate(point, destinationsById, destinations) {
           <fieldset class="event__type-group">
             <legend class="visually-hidden">Event type</legend>
             ${POINT_TYPES.map((item) => (`<div class="event__type-item">
-              <input id="event-type-${type}-${id}" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${item}"
+              <input id="event-type-${item}-${id}" class="event__type-input  visually-hidden" type="radio" name="event-type" value="${item}"
               ${item === type ? 'checked' : ''}>
               <label class="event__type-label  event__type-label--${item}" for="event-type-${item}-${id}">${item}</label>
             </div>`)).join('')}
@@ -28,7 +28,7 @@ function createTypeEditTemplate(point, destinationsById, destinations) {
         <label class="event__label  event__type-output" for="event-destination-${id}">
           ${type}
         </label>
-        <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${name}" list="destination-list-${id}">
+        <input class="event__input  event__input--destination" id="event-destination-${id}" type="text" name="event-destination" value="${namePoint}" list="destination-list-${id}">
         <datalist id="destination-list-${id}">
         ${destinations.map(({ name: namePointDestination }) => `<option value="${namePointDestination}"></option>`).join('')}
         </datalist>
@@ -96,8 +96,8 @@ function createOffersEditTemplate(offersById, offersByType) {
   return '';
 }
 
-function createPhotosEditTemplate(destinationsById) {
-  const { pictures } = destinationsById;
+function createPhotosEditTemplate(destination) {
+  const { pictures } = destination;
   if (pictures.length === 0) {
     return '';
   }
@@ -110,8 +110,8 @@ function createPhotosEditTemplate(destinationsById) {
   );
 }
 
-function createDestinationEditTemplate(destinationsById) {
-  const { description, pictures } = destinationsById;
+function createDestinationEditTemplate(destination) {
+  const { description, pictures } = destination;
   if (description.length === 0 && pictures.length === 0) {
     return '';
   }
@@ -119,16 +119,17 @@ function createDestinationEditTemplate(destinationsById) {
     `<section class="event__section  event__section--destination">
       <h3 class="event__section-title  event__section-title--destination">Destination</h3>
       <p class="event__destination-description">${description}</p>
-      ${createPhotosEditTemplate(destinationsById)}
+      ${createPhotosEditTemplate(destination)}
     </section>`);
 }
 
-function createWaypointsEditTemplate(point, destinations, offersById, offersByType, destinationsById) {
+function createWaypointsEditTemplate(state, destinations, offersById) {
+  const {point, destination,offersByType} = state;
   return `
   <li class="trip-events__item">
     <form class="event event--edit" action="#" method="post">
       <header class="event__header">
-        ${createTypeEditTemplate(point, destinationsById, destinations)}
+        ${createTypeEditTemplate(point, destination, destinations)}
         ${createDataEditTemplate (point)}
         ${createPriceEditTemplate(point)}
         ${createSaveButtonEditTemplate()}
@@ -137,41 +138,102 @@ function createWaypointsEditTemplate(point, destinations, offersById, offersByTy
       </header>
       <section class = "event__details"
         ${createOffersEditTemplate(offersById, offersByType)}
-        ${createDestinationEditTemplate(destinationsById)}
+        ${createDestinationEditTemplate(destination)}
       </section>
     </form>
   </li>`;
 }
 
 
-export default class WaypointsEditView extends AbstractView {
-  #point = null;
-  #destinations = null;
-  #destinationsById = null;
-  #offersByType = null;
+export default class WaypointsEditView extends AbstractStatefulView {
+  #offersAll = null;
   #offersById = null;
+  #destinations = null;
   #handleFormSubmit;
 
-  constructor({point, destinations, offersById, offersByType, destinationsById, onFormSubmit}) {
+  constructor({point, destination, offersByType, offersAll, offersById, destinations, onFormSubmit}) {
     super();
-    this.#point = point;
-    this.#destinations = destinations;
+    this._setState(WaypointsEditView.parsePointToStat(point,destination, offersByType));
+    this.#offersAll = offersAll;
     this.#offersById = offersById;
-    this.#offersByType = offersByType;
-    this.#destinationsById = destinationsById;
+    this.#destinations = destinations;
     this.#handleFormSubmit = onFormSubmit;
-
-    this.element.querySelector('.event--edit')?.addEventListener('submit', this.#formSubmitHandler);
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#formSubmitHandler);
-    this.element.querySelector('.event__save-btn').addEventListener('click', (evt) => evt.preventDefault());
+    this._restoreHandlers();
   }
 
   get template() {
-    return createWaypointsEditTemplate(this.#point, this.#destinations, this.#offersById, this.#offersByType, this.#destinationsById);
+    return createWaypointsEditTemplate(this._state, this.#offersAll, this.#offersById, this.#destinations);
   }
+
+  reset(point, offersByType, destination) {
+    this.updateElement(
+      WaypointsEditView.parsePointToStat(point, offersByType, destination),
+    );
+  }
+
+  _restoreHandlers() {
+    this.element.querySelector('.event--edit')?.addEventListener('submit', this.#formSubmitHandler);
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#exitsWithoutSaving);
+    this.element.querySelector('.event__save-btn').addEventListener('click', (e) => e.preventDefault());
+    this.element.querySelector('.event__type-group').addEventListener('change', this.#typeToggleHandler);
+    this.element.querySelector('.event__input--destination').addEventListener('input', this.#destinationToggleHandler);
+  }
+
+  #exitsWithoutSaving = (e) => {
+    e.preventDefault();
+    if (e.isTrusted) {
+      document.dispatchEvent(new KeyboardEvent('keydown', {
+        key: 'Escape',
+      }));
+    }
+  };
+
 
   #formSubmitHandler = (e) => {
     e.preventDefault();
-    this.#handleFormSubmit(this.#point);
+    this.#handleFormSubmit(WaypointsEditView.parseStatToPoint(this._state));
   };
+
+  #typeToggleHandler = (e) => {
+    this.updateElement({
+      point: {
+        ...this._state.point,
+        type: e.target.value,
+      },
+      offersByType: this.#offersAll.find((offer) => offer.type === e.target.value),
+    });
+  };
+
+  #destinationToggleHandler = (e) => {
+    const name = e.target.value;
+    const destinationName = [];
+    this.#destinations.forEach((element) => {
+      destinationName.push(element.name);
+    });
+
+    if(!destinationName.includes(name)) {
+      e.target.value = '';
+      return '';
+
+    }
+
+    if (name){
+      this.updateElement({
+        destination: this.#destinations.find((item) => item.name === name)
+      });
+    }
+
+  };
+
+  static parsePointToStat(point,destination,offersByType){
+    return{
+      point: {...point},
+      destination: {...destination},
+      offersByType: {...offersByType}
+    };
+  }
+
+  static parseStatToPoint(state){
+    return {...state};
+  }
 }
