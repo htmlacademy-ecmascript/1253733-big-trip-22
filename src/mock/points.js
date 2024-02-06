@@ -1,7 +1,7 @@
 import { v4 as uuidv4 } from 'uuid';
-import {getRandomArrayElement} from '../utils.js';
-import {POINT_TYPES} from '../const.js';
-import {CITIES} from '../const.js';
+import {getRandomArrayElement} from '../utils/utils.js';
+import {POINT_TYPES} from '../utils/const.js';
+import {CITIES} from '../utils/const.js';
 
 
 const destinationsMock = [

@@ -1,38 +1,52 @@
+import Observable from '../framework/observable.js';
 import { getRandomPoint } from '../mock/points.js';
-import { destinationsMock } from '../mock/points.js';
-import { offersMock } from '../mock/points.js';
 
 const WAYPOINT_COUNT = 2;
 
-export default class PointsModel {
+export default class PointsModel extends Observable {
   #points = Array.from({ length: WAYPOINT_COUNT }, getRandomPoint);
-  #destinations = destinationsMock;
-  #offers = offersMock;
 
   get points() {
-    return structuredClone(this.#points);
+    return this.#points;
   }
 
-  get destinations() {
-    return structuredClone(this.#destinations);
+  updatePoint(updateType, update) {
+    const index = this.#points.findIndex((point) => point.id === update.id);
+
+    if (index === -1) {
+      throw new Error('Can\'t update point');
+    }
+
+    this.#points = [
+      ...this.#points.slice(0, index),
+      update,
+      ...this.#points.slice(index + 1),
+    ];
+
+    this._notify(updateType, update);
   }
 
-  get offers() {
-    return structuredClone(this.#offers);
+  addPoint(updateType, update) {
+    this.#points = [
+      update,
+      ...this.#points,
+    ];
+
+    this._notify(updateType, update);
   }
 
-  getOffersByType(type){
-    const allOffers = this.offers;
-    return allOffers.find((item) => item.type === type);
+  deletePoint(updateType, update) {
+    const index = this.#points.findIndex((point) => point.id === update.id);
+    if (index === -1) {
+      throw new Error('Can\'t delete point');
+    }
+
+    this.#points = [
+      ...this.#points.slice(0, index),
+      ...this.#points.slice(index + 1),
+    ];
+
+    this._notify(updateType);
   }
 
-  getOffersById(type, itemId) {
-    const offersByType = this.getOffersByType(type);
-    return offersByType.offers.filter((item) => itemId.find((id) => item.id === id));
-  }
-
-  getDestinationById(id) {
-    const allDestinations = this.destinations;
-    return allDestinations.find((item)=> item.id === id);
-  }
 }
