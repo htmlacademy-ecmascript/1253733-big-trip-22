@@ -1,42 +1,39 @@
 import { render, replace, remove} from '../framework/render.js';
 import Waypoint from '../view/waypoint.js';
 import WaypointsEditView from '../view/waypoints-edit.js';
-
-
-const Mode = {
-  DEFAULT: 'DEFAULT',
-  EDITING: 'EDITING'
-};
+import { Mode, UserAction, UpdateType } from '../utils/const.js';
 
 export default class WaypointPresenter {
   #waypoint = null;
   #waypointEdit = null;
   #point = null;
+  #offersModel = null;
+  #destinationModel = null;
   #destination = null;
   #offersByType = null;
-  #waypointList = null;
-  #pointsModel = null;
+  #pointsList = null;
   #handlePointChange = null;
   #handleModeChange = null;
   #mode = Mode.DEFAULT;
 
-  constructor({waypointList, pointsModel, onPointChange, onModeChange}) {
-    this.#waypointList = waypointList;
-    this.#pointsModel = pointsModel;
+  constructor({pointsList, offersModel, destinationModel, onPointChange, onModeChange}) {
+    this.#pointsList = pointsList;
+    this.#offersModel = offersModel;
+    this.#destinationModel = destinationModel;
     this.#handlePointChange = onPointChange;
     this.#handleModeChange = onModeChange;
   }
 
   init (point) {
     this.#point = point;
-    this.#offersByType = this.#pointsModel.getOffersByType(point.type);
-    this.#destination = this.#pointsModel.getDestinationById(point.destination);
+    this.#offersByType = this.#offersModel.getOffersByType(point.type);
+    this.#destination = this.#destinationModel.getDestinationById(point.destination);
     const prevWaypoint = this.#waypoint;
     const prevWaypointEdit = this.#waypointEdit;
 
     this.#waypoint = new Waypoint ({
       point: this.#point,
-      offersById: [...this.#pointsModel.getOffersById(point.type,point.offersId)],
+      offersById: [...this.#offersModel.getOffersById(point.type,point.offersId)],
       destination:  this.#destination,
       onFavoriteClick: this.#handleFavoriteChange,
       onEditClick: this.#handleEditClick,
@@ -44,16 +41,18 @@ export default class WaypointPresenter {
 
     this.#waypointEdit = new WaypointsEditView ({
       point: this.#point,
-      destinations: this.#pointsModel.destinations,
+      destinations: this.#destinationModel.destinations,
       offersByType: this.#offersByType,
-      offersAll: [...this.#pointsModel.offers],
-      offersById: [...this.#pointsModel.getOffersById(point.type,point.offersId)],
+      offersAll: [...this.#offersModel.offers],
+      offersById: [...this.#offersModel.getOffersById(point.type,point.offersId)],
       destination:  this.#destination,
       onFormSubmit: this.#handleFormSubmit,
+      onDeleteClick: this.#handleDeleteClick,
+      isEditMode: true
     });
 
     if (prevWaypoint === null || prevWaypointEdit === null) {
-      render(this.#waypoint, this.#waypointList.element);
+      render(this.#waypoint, this.#pointsList.element);
       return;
     }
     if (this.#mode === Mode.DEFAULT) {
@@ -107,11 +106,23 @@ export default class WaypointPresenter {
   };
 
   #handleFavoriteChange = () =>{
-    this.#handlePointChange({...this.#point, isFavorite: !this.#point.isFavorite});
+    this.#handlePointChange(UserAction.UPDATE_WAYPOINT,
+      UpdateType.PATCH,
+      { ...this.#waypoint, isFavorite: !this.#waypoint.isFavorite });
   };
 
   #handleFormSubmit = (point) => {
-    this.#handlePointChange(point);
+    this.#handlePointChange(UserAction.UPDATE_WAYPOINT,
+      UpdateType.MINOR,
+      point,);
     this.#replaceFormToPoint();
+  };
+
+  #handleDeleteClick = (point) => {
+    this.#handlePointChange(
+      UserAction.DELETE_WAYPOINT,
+      UpdateType.MINOR,
+      point,
+    );
   };
 }

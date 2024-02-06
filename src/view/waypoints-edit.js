@@ -1,5 +1,5 @@
 import AbstractStatefulView from '../framework/view/abstract-stateful-view.js';
-import {POINT_TYPES} from '../const.js';
+import {POINT_TYPES} from '../utils/const.js';
 
 function createTypeEditTemplate(point, destination, destinations) {
   const {type, id} = point;
