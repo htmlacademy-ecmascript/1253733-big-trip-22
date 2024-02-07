@@ -197,10 +197,6 @@ export default class TripPresenter {
   #renderApp() {
     this.#renderFilters();
     this.#renderTripInfo();
-    if (this.points.length === 0) {
-      this.#renderNoEvent();
-      return;
-    }
     this.#renderWaypointList();
   }
 
