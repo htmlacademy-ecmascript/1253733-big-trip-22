@@ -1,17 +1,18 @@
 import { render, replace, remove} from '../framework/render.js';
 import Waypoint from '../view/waypoint.js';
-import WaypointsEditView from '../view/waypoints-edit.js';
+import FormEdit from '../view/waypoints-edit.js';
 import { Mode, UserAction, UpdateType } from '../utils/const.js';
 
 export default class WaypointPresenter {
+  #waypointComponent = null;
+  #waypointEditComponent = null;
   #waypoint = null;
-  #waypointEdit = null;
-  #point = null;
   #offersModel = null;
   #destinationModel = null;
   #destination = null;
-  #offersByType = null;
+  #offersType = null;
   #pointsList = null;
+  #offers = null;
   #handlePointChange = null;
   #handleModeChange = null;
   #mode = Mode.DEFAULT;
@@ -25,79 +26,116 @@ export default class WaypointPresenter {
   }
 
   init (point) {
-    this.#point = point;
-    this.#offersByType = this.#offersModel.getOffersByType(point.type);
-    this.#destination = this.#destinationModel.getDestinationById(point.destination);
-    const prevWaypoint = this.#waypoint;
-    const prevWaypointEdit = this.#waypointEdit;
+    this.#waypoint = point;
+    this.#offersType = this.#offersModel.getOffersByType(point.type);
+    this.#destination = this.#destinationModel.getDestinationsById(point.destination);
+    this.#offers = [...this.#offersModel.getOffersById(point.type, point.offersId)];
+    const prevWaypointComponent = this.#waypointComponent;
+    const prevWaypointEditComponent = this.#waypointEditComponent;
 
-    this.#waypoint = new Waypoint ({
-      point: this.#point,
-      offersById: [...this.#offersModel.getOffersById(point.type,point.offersId)],
-      destination:  this.#destination,
-      onFavoriteClick: this.#handleFavoriteChange,
+    this.#waypointComponent = new Waypoint({
+      waypoint: this.#waypoint,
+      offers: [...this.#offersModel.getOffersById(point.type, point.offersId)],
+      destination: this.#destination,
       onEditClick: this.#handleEditClick,
+      onFavoriteClick: this.#handleFavoriteChange,
     });
 
-    this.#waypointEdit = new WaypointsEditView ({
-      point: this.#point,
-      destinations: this.#destinationModel.destinations,
-      offersByType: this.#offersByType,
+    this.#waypointEditComponent = new FormEdit({
+      waypoint: this.#waypoint,
+      offersType: this.#offersType,
+      offers: [...this.#offersModel.getOffersById(point.type, point.offersId)],
+      destination: this.#destination,
+      destinationAll: this.#destinationModel.destinations,
       offersAll: [...this.#offersModel.offers],
-      offersById: [...this.#offersModel.getOffersById(point.type,point.offersId)],
-      destination:  this.#destination,
       onFormSubmit: this.#handleFormSubmit,
       onDeleteClick: this.#handleDeleteClick,
-      isEditMode: true
+      isEditMode: true,
     });
 
-    if (prevWaypoint === null || prevWaypointEdit === null) {
-      render(this.#waypoint, this.#pointsList.element);
+    if (prevWaypointComponent === null || prevWaypointEditComponent === null) {
+      render(this.#waypointComponent, this.#pointsList.element);
       return;
     }
     if (this.#mode === Mode.DEFAULT) {
-      replace(this.#waypoint, prevWaypoint);
+      replace(this.#waypointComponent, prevWaypointComponent);
     }
     if (this.#mode === Mode.EDITING) {
-      replace(this.#waypointEdit, prevWaypointEdit);
+      replace(this.#waypointComponent, prevWaypointEditComponent);
+      this.#mode = Mode.DEFAULT;
     }
 
-    remove(prevWaypoint);
-    remove(prevWaypointEdit);
+    remove(prevWaypointComponent);
+    remove(prevWaypointEditComponent);
   }
 
 
   destroy() {
-    remove(this.#waypoint);
-    remove(this.#waypointEdit);
+    remove(this.#waypointComponent);
+    remove(this.#waypointEditComponent);
   }
 
 
-  #escKeyDownHandler = (e)=> {
-    if(e.kay === 'Escape') {
-      e.preventDefault();
-      this.#waypointEdit.reset(this.#point,this.#offersByType, this.#destination);
+  resetView(){
+    if (this.#mode !== Mode.DEFAULT) {
+      this.#waypointEditComponent.reset(this.#waypoint, this.#offersType, this.#destination, this.#offers);
+      this.#replaceFormToPoint();
+    }
+  }
+
+  setSaving() {
+    if (this.#mode === Mode.EDITING) {
+      this.#waypointEditComponent.updateElement({
+        isDisabled: true,
+        isSaving: true,
+      });
+    }
+  }
+
+  setDeleting() {
+    if (this.#mode === Mode.EDITING) {
+      this.#waypointEditComponent.updateElement({
+        isDisabled: true,
+        isDeleting: true,
+      });
+    }
+  }
+
+  setAborting() {
+    if (this.#mode === Mode.DEFAULT) {
+      this.#waypointComponent.shake();
+      return;
+    }
+
+    const resetFormState = () => {
+      this.#waypointEditComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#waypointEditComponent.shake(resetFormState);
+  }
+
+  #documentKeydownHandler = (evt) => {
+    if (evt.key === 'Escape') {
+      evt.preventDefault();
+      this.#waypointEditComponent.reset(this.#waypoint, this.#offersType, this.#destination, this.#offers);
       this.#replaceFormToPoint();
     }
   };
 
-  resetView(){
-    if (this.#mode !== Mode.DEFAULT) {
-      this.#waypointEdit.reset(this.#point, this.#offersByType, this.#destination);
-      this.#replaceFormToPoint();
-    }
-  }
-
   #replacePointToForm (){
-    replace (this.#waypointEdit, this.#waypoint);
-    document.addEventListener('keydown',this.#escKeyDownHandler);
+    replace (this.#waypointEditComponent, this.#waypointComponent);
+    document.addEventListener('keydown',this.#documentKeydownHandler);
     this.#handleModeChange();
     this.#mode = Mode.EDITING;
   }
 
   #replaceFormToPoint (){
-    replace (this.#waypoint, this.#waypointEdit);
-    document.removeEventListener('keydown',this.#escKeyDownHandler);
+    replace (this.#waypointComponent, this.#waypointEditComponent);
+    document.removeEventListener('keydown',this.#documentKeydownHandler);
     this.#mode = Mode.DEFAULT;
   }
 
@@ -112,10 +150,10 @@ export default class WaypointPresenter {
   };
 
   #handleFormSubmit = (point) => {
-    this.#handlePointChange(UserAction.UPDATE_WAYPOINT,
+    this.#handlePointChange(
+      UserAction.UPDATE_WAYPOINT,
       UpdateType.MINOR,
       point,);
-    this.#replaceFormToPoint();
   };
 
   #handleDeleteClick = (point) => {

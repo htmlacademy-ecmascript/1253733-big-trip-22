@@ -7,25 +7,25 @@ import { FilterType, UpdateType } from '../utils/const.js';
 export default class FilterPresenter {
   #filterContainer;
   #filterModel;
-  #pointsModel;
+  #waypointModel;
 
   #filterComponent = null;
 
-  constructor({ filterContainer, filterModel, pointsModel }) {
+  constructor({ filterContainer, filterModel, waypointModel }) {
     this.#filterContainer = filterContainer;
     this.#filterModel = filterModel;
-    this.#pointsModel = pointsModel;
+    this.#waypointModel = waypointModel;
 
-    this.#pointsModel.addObserver(this.#handleModelEvent);
+    this.#waypointModel.addObserver(this.#handleModelEvent);
     this.#filterModel.addObserver(this.#handleModelEvent);
   }
 
   get filters() {
-    const points = [...this.#pointsModel.points];
+    const waypoints = [...this.#waypointModel.waypoints];
 
     return Object.values(FilterType).map((type) => ({
       type,
-      count: filter[type](points).length
+      count: filter[type](waypoints).length
     }));
   }
 

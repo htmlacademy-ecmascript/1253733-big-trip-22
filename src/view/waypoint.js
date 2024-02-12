@@ -1,48 +1,51 @@
 import AbstractView from '../framework/view/abstract-view.js';
+import { humanizeDueDate, getDuration } from '../utils/utils.js';
+import { DateFormat } from '../utils/const.js';
 
-function createWaypointDataTemplate() {
-  return ('<time class="event__date" datetime="2019-03-18">MAR 18</time>');
+function createStartDateTemplate(start) {
+  return (`<time class="event__date" datetime="${humanizeDueDate(start, DateFormat.FULL_DATE)}">${humanizeDueDate(start, DateFormat.DAY)}</time>`);
 }
 
-function createWaypointTypeEventTemplate (point, destination) {
-  const {type} = point;
-  const { name} = destination;
+function createTypeEventTemplate(waypoint, destination) {
+  const { name } = destination;
+  const { type } = waypoint;
   return (`<div class="event__type">
     <img class="event__type-icon" width="42" height="42" src="img/icons/${type}.png" alt="Event type icon">
   </div>
   <h3 class="event__title">${type} ${name}</h3>`);
 }
 
-function createWaypointScheduleTemplate (point) {
-  const {dateFrom, dateTo} = point;
+function createScheduleTemplate(start, end) {
   return (`<div class="event__schedule">
     <p class="event__time">
-      <time class="event__start-time" datetime="2019-03-18T10:30">${dateFrom}</time>&mdash;
-      <time class="event__end-time" datetime="2019-03-18T11:00">${dateTo}</time>
+      <time class="event__start-time" datetime="2019-03-18T10:30">${humanizeDueDate(start, DateFormat.HOURS_MINUTES)}</time>
+      &mdash;
+      <time class="event__end-time" datetime="2019-03-18T11:00">${humanizeDueDate(end, DateFormat.HOURS_MINUTES)}</time>
     </p>
-    <p class="event__duration">30M</p>
+    <p class="event__duration">${getDuration(start, end)}</p>
   </div>`);
 }
 
-function createWaypointPriceTemplate (point) {
-  const {basePrice} = point;
-  return (`<p class="event__price">&euro;&nbsp;<span class="event__price-value">${basePrice}</span></p>`);
+function createPriceTemplate(price) {
+  return (`<p class="event__price">
+    &euro;&nbsp;<span class="event__price-value">${price}</span>
+  </p>`);
 }
 
-function createWaypointOffersTemplate (offersById) {
+function createOffersTemplate(offers) {
   return (`<h4 class="visually-hidden">Offers:</h4>
-    <ul class="event__selected-offers">
-      ${offersById.map(({title, price}) => `<li class="event__offer">
+  <ul class="event__selected-offers">
+  ${offers.map(({ title, price }) => `<li class="event__offer" >
       <span class="event__offer-title">${title}</span>
-      &plus;&euro;&nbsp;
+      +€&nbsp;
       <span class="event__offer-price">${price}</span>
-      </li>`).join('')}
-    </ul>`);
+    </li> `).join('')}
+  </ul>`);
 }
 
-function createWaypointFavoriteBtnTemplate(point) {
-  const {isFavorite} = point;
-  return(`<button class="event__favorite-btn ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
+function createFavoriteButton(waypoint) {
+  const { isFavorite } = waypoint;
+  return (`<button class="event__favorite-btn ${isFavorite ? 'event__favorite-btn--active' : ''}" type="button">
     <span class="visually-hidden">Add to favorite</span>
     <svg class="event__favorite-icon" width="28" height="28" viewBox="0 0 28 28">
       <path d="M14 21l-8.22899 4.3262 1.57159-9.1631L.685209 9.67376 9.8855 8.33688 14 0l4.1145 8.33688 9.2003 1.33688-6.6574 6.48934 1.5716 9.1631L14 21z"/>
@@ -50,62 +53,60 @@ function createWaypointFavoriteBtnTemplate(point) {
   </button>`);
 }
 
-function createWaypointRollupBtnTemplate() {
-  return(`<button class="event__rollup-btn" type="button">
+function createRollupButton() {
+  return (`<button class="event__rollup-btn" type="button">
     <span class="visually-hidden">Open event</span>
   </button>`);
 }
 
-function createWaypointTemplate (point, offersById,destination) {
-  return(`
+function createWaypointTemplate(waypoint, offers, destination) {
+  const { basePrice, dateFrom, dateTo, } = waypoint;
+
+  return (`
   <li class="trip-events__item">
     <div class="event">
-    ${createWaypointDataTemplate()}
-    ${createWaypointTypeEventTemplate(point,destination)}
-    ${createWaypointScheduleTemplate(point)}
-    ${createWaypointPriceTemplate(point)}
-    ${createWaypointOffersTemplate(offersById)}
-    ${createWaypointFavoriteBtnTemplate(point)}
-    ${createWaypointRollupBtnTemplate()}
+    ${createStartDateTemplate(dateFrom)}
+    ${createTypeEventTemplate(waypoint, destination)}
+    ${createScheduleTemplate(dateFrom, dateTo)}
+    ${createPriceTemplate(basePrice)}
+    ${createOffersTemplate(offers)}
+    ${createFavoriteButton(waypoint)}
+    ${createRollupButton()}
     </div>
   </li>`);
 }
 
 export default class Waypoint extends AbstractView {
-  #point;
-  #offersById;
+  #waypoint;
+  #offers;
   #destination;
-  #handlerEditClick;
-  #handlerFavoriteClick;
+  #handleEditClick;
+  #handleFavoriteClick;
 
-
-  constructor({point, offersById, destination, onFavoriteClick, onEditClick}) {
+  constructor({ waypoint, offers, destination, onEditClick, onFavoriteClick }) {
     super();
-    this.#point = point;
-    this.#offersById = offersById;
+    this.#waypoint = waypoint;
+    this.#offers = offers;
     this.#destination = destination;
-    this.#handlerFavoriteClick = onFavoriteClick;
-    this.#handlerEditClick = onEditClick;
-    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
-    this.element.querySelector('.event__favorite-btn').addEventListener('click', this.#favoriteClickHandler);
+    this.#handleEditClick = onEditClick;
+    this.#handleFavoriteClick = onFavoriteClick;
 
+    this.element.querySelector('.event__rollup-btn').addEventListener('click', this.#editClickHandler);
+    this.element.querySelector('.event__favorite-btn')
+      .addEventListener('click', this.#favoriteClickHandler);
   }
 
   get template() {
-    return createWaypointTemplate(
-      this.#point,
-      this.#offersById,
-      this.#destination
-    );
+    return createWaypointTemplate(this.#waypoint, this.#offers, this.#destination);
   }
 
-  #editClickHandler = (e) =>{
-    e.preventDefault();
-    this.#handlerEditClick();
+  #editClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleEditClick();
   };
 
-  #favoriteClickHandler = (e)=>{
-    e.preventDefault();
-    this.#handlerFavoriteClick();
+  #favoriteClickHandler = (evt) => {
+    evt.preventDefault();
+    this.#handleFavoriteClick();
   };
 }
