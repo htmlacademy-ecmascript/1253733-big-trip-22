@@ -1,14 +1,15 @@
 import { remove, render, RenderPosition } from '../framework/render.js';
 import { UserAction, UpdateType, DEFAULT_TYPE } from '../utils/const.js';
-import WaypointsEditView from '../view/waypoints-edit.js';
+import FormEdit from '../view/waypoints-edit.js';
 
-export default class NewPointPresenter {
+export default class NewEventPresenter {
 
   #pointsList;
   #handleDataChange;
   #handleDestroy;
   #destinationModel;
   #offersModel;
+
   #formComponent = null;
 
   constructor({ pointsList, onDataChange, onClose, destinationModel, offersModel }) {
@@ -24,13 +25,12 @@ export default class NewPointPresenter {
       return;
     }
 
-
-    this.#formComponent = new WaypointsEditView({
-      point: { type: DEFAULT_TYPE, basePrice: 0 },
-      offersById: [],
-      destination: { name: '', photos: [], description: '' },
+    this.#formComponent = new FormEdit({
+      waypoint: { type: DEFAULT_TYPE, basePrice: 0 },
+      offers: [],
+      destination: { name: '', pictures: [], description: '' },
       offersType: this.#offersModel.getOffersByType(DEFAULT_TYPE),
-      destinations: this.#destinationModel.destinations,
+      destinationAll: this.#destinationModel.destinations,
       offersAll: [...this.#offersModel.offers],
       onFormSubmit: this.#handleFormSubmit,
       onDeleteClick: this.#handleDeleteClick,
@@ -55,13 +55,31 @@ export default class NewPointPresenter {
     document.removeEventListener('keydown', this.#escKeyDownHandler);
   }
 
+  setSaving() {
+    this.#formComponent.updateElement({
+      isDisabled: true,
+      isSaving: true,
+    });
+  }
+
+  setAborting() {
+    const resetFormState = () => {
+      this.#formComponent.updateElement({
+        isDisabled: false,
+        isSaving: false,
+        isDeleting: false,
+      });
+    };
+
+    this.#formComponent.shake(resetFormState);
+  }
+
   #handleFormSubmit = (point) => {
     this.#handleDataChange(
       UserAction.ADD_WAYPOINT,
       UpdateType.MINOR,
       point,
     );
-    this.destroy();
   };
 
   #handleDeleteClick = () => {

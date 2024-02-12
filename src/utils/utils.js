@@ -1,49 +1,55 @@
 import dayjs from 'dayjs';
 import durationPlugin from 'dayjs/plugin/duration.js';
-dayjs.extend(durationPlugin);
+import isBetween from 'dayjs/plugin/isBetween.js';
 import { FilterType } from './const.js';
-const humanizeDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format(format) : '';
 
 const HOURS_COUNT = 24;
 const MINUTES_COUNT = 60;
 
+dayjs.extend(durationPlugin);
+dayjs.extend(isBetween);
+
+const humanizeDueDate = (dueDate, format) => dueDate ? dayjs(dueDate).format(format) : '';
+
 const getDuration = (start, end) => {
   const duration = dayjs.duration(dayjs(end).diff(dayjs(start)));
-  if (duration.months()) {
-    const totalDays = duration.asDays();
-    const days = Math.floor(totalDays);
-    const hours = Math.floor((totalDays - days) * HOURS_COUNT);
-    const minutes = Math.floor(duration.asMinutes() - days * HOURS_COUNT * MINUTES_COUNT - hours * MINUTES_COUNT);
-    return `${days}D ${hours.toString().padStart(2, '0')}H ${minutes.toString().padStart(2, '0')}M`;
+  const totalDays = duration.asDays();
+  const days = Math.floor(totalDays);
+  let hours = Math.floor((totalDays - days) * HOURS_COUNT);
+  let minutes = Math.floor(duration.asMinutes() - days * HOURS_COUNT * MINUTES_COUNT - hours * MINUTES_COUNT);
+  if (minutes === MINUTES_COUNT) {
+    hours++;
+    minutes = 0;
   }
-  if (duration.days()) {
-    const hours = Math.floor(duration.asHours());
-    const minutes = Math.floor(duration.asMinutes() - hours * MINUTES_COUNT);
-    return `${duration.days()}D ${hours.toString().padStart(2, '0')}H ${minutes.toString().padStart(2, '0')}M`;
+  if (days) {
+    return `${days.toString().padStart(2, '0')}D ${hours.toString().padStart(2, '0')}H ${minutes.toString().padStart(2, '0')}M`;
   }
-  if (duration.hours()) {
-    return `${duration.hours().toString().padStart(2, '0')}H ${duration.minutes().toString().padStart(2, '0')}M`;
+  if (hours) {
+    return `${hours.toString().padStart(2, '0')}H ${minutes.toString().padStart(2, '0')}M`;
+  } else {
+    return `${minutes.toString().padStart(2, '0')}M`;
   }
-
-  return `${duration.minutes().toString().padStart(2, '0')}M`;
 };
 
-function checksTravelIsSame(dueDate) {
-  return dueDate && dayjs(dueDate).isSame(dayjs(), 'D');
+function checksTravelIsSame(point) {
+  const { dateFrom, dateTo } = point;
+  const currentDate = dayjs();
+
+  return currentDate.isBetween(dateFrom, dateTo, 'minute', '[]');
 }
 
 function checksTravelIsBefore(dueDate) {
-  return dueDate && dayjs(dueDate).isBefore(dayjs(), 'D');
+  return dueDate && dayjs(dueDate).isBefore(dayjs());
 }
 
 function checksTravelIsAfter(dueDate) {
-  return dueDate && dayjs(dueDate).isAfter(dayjs(), 'D');
+  return dueDate && dayjs(dueDate).isAfter(dayjs());
 }
 
 const filter = {
   [FilterType.EVERYTHING]: (points) => points,
-  [FilterType.PAST]: (points) => points.filter((point) => checksTravelIsBefore(point.dateFrom)),
-  [FilterType.PRESENT]: (points) => points.filter((point) => checksTravelIsSame(point.dateFrom)),
+  [FilterType.PAST]: (points) => points.filter((point) => checksTravelIsBefore(point.dateTo)),
+  [FilterType.PRESENT]: (points) => points.filter((point) => checksTravelIsSame(point)),
   [FilterType.FUTURE]: (points) => points.filter((point) => checksTravelIsAfter(point.dateFrom)),
 };
 
@@ -80,13 +86,16 @@ function sortWaypointByPrice(waypointA, waypointB) {
   return 0;
 }
 
-const getRandomInteger = (a = 0, b = 50) => {
-  const lower = Math.ceil(Math.min(a, b));
-  const upper = Math.floor(Math.max(a, b));
-  const result = Math.random() * (upper - lower + 1) + lower;
-  return Math.floor(result);
-};
+function formatNames(items) {
+  items = structuredClone(items);
+  if (items.length > 3) {
+    items.splice(1, items.length - 2, '...');
+  }
+  return items.join(' — ');
+}
 
-const getRandomArrayElement = (elements) => elements[getRandomInteger(0, elements.length - 1)];
+function handleButtonDisabled(value, component) {
+  component.element.disabled = value;
+}
 
-export { humanizeDueDate, getDuration, filter, sortWaypointByDate, sortWaypointByDuration, sortWaypointByPrice, getRandomArrayElement };
+export { humanizeDueDate, getDuration, filter, sortWaypointByDate, sortWaypointByDuration, sortWaypointByPrice, formatNames, handleButtonDisabled };
