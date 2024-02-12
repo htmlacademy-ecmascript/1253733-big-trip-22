@@ -8,7 +8,7 @@ const Method = {
 };
 
 export default class PointsApiService extends ApiService {
-  get points() {
+  get waypoints() {
     return this._load({ url: 'points' })
       .then(ApiService.parseResponse);
   }
@@ -23,11 +23,11 @@ export default class PointsApiService extends ApiService {
       .then(ApiService.parseResponse);
   }
 
-  async updatePoint(point) {
+  async updateWaypoint(waypoint) {
     const response = await this._load({
-      url: `points/${point.id}`,
+      url: `points/${waypoint.id}`,
       method: Method.PUT,
-      body: JSON.stringify(this.#adaptToServer(point)),
+      body: JSON.stringify(this.#adaptToServer(waypoint)),
       headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
@@ -36,11 +36,11 @@ export default class PointsApiService extends ApiService {
     return parsedResponse;
   }
 
-  async addPoint(point) {
+  async addWaypoint(waypoint) {
     const response = await this._load({
       url: 'points',
       method: Method.POST,
-      body: JSON.stringify(this.#adaptToServer(point)),
+      body: JSON.stringify(this.#adaptToServer(waypoint)),
       headers: new Headers({ 'Content-Type': 'application/json' }),
     });
 
@@ -49,31 +49,31 @@ export default class PointsApiService extends ApiService {
     return parsedResponse;
   }
 
-  async deletePoint(point) {
+  async deleteWaypoint(waypoint) {
     const response = await this._load({
-      url: `points/${point.id}`,
+      url: `points/${waypoint.id}`,
       method: Method.DELETE,
     });
 
     return response;
   }
 
-  #adaptToServer(point) {
-    const adaptedPoint = {
-      ...point,
-      'base_price': +point.basePrice,
-      'date_from': point.dateFrom,
-      'date_to': point.dateTo,
-      'is_favorite': point.isFavorite || false,
-      offers: point.offersId || [],
+  #adaptToServer(waypoint) {
+    const adaptedWaypoint = {
+      ...waypoint,
+      'base_price': +waypoint.basePrice,
+      'date_from': waypoint.dateFrom,
+      'date_to': waypoint.dateTo,
+      'is_favorite': waypoint.isFavorite || false,
+      offers: waypoint.offersId || [],
     };
 
-    delete adaptedPoint.basePrice;
-    delete adaptedPoint.dateFrom;
-    delete adaptedPoint.dateTo;
-    delete adaptedPoint.isFavorite;
-    delete adaptedPoint.offersId;
+    delete adaptedWaypoint.basePrice;
+    delete adaptedWaypoint.dateFrom;
+    delete adaptedWaypoint.dateTo;
+    delete adaptedWaypoint.isFavorite;
+    delete adaptedWaypoint.offersId;
 
-    return adaptedPoint;
+    return adaptedWaypoint;
   }
 }

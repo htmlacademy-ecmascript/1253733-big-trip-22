@@ -1,17 +1,16 @@
 import Observable from '../framework/observable.js';
 import { UpdateType } from '../utils/const.js';
 
-
 export default class DestinationModel extends Observable {
   #pointsApiService;
   #destinations = [];
 
-  constructor({pointsApiService}) {
+  constructor({ pointsApiService }) {
     super();
-    this.pointsApiService = pointsApiService;
+    this.#pointsApiService = pointsApiService;
   }
 
-  get destinations () {
+  get destinations() {
     return this.#destinations;
   }
 
@@ -25,8 +24,8 @@ export default class DestinationModel extends Observable {
     this._notify(UpdateType.INIT);
   }
 
-  getDestinationById(id) {
-    const allDestinations = this.destinations;
-    return allDestinations.find((item)=> item.id === id);
+  getDestinationsById(id) {
+    const allDestination = this.#destinations;
+    return allDestination.find((item) => item.id === id);
   }
 }
